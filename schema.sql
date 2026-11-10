@@ -64,3 +64,7 @@ create policy "dono acessa suas notas" on notas
   for all to authenticated
   using (usuario_id = auth.uid())
   with check (usuario_id = auth.uid());
+
+-- 3) Adição de menção ---------------------------------------------------------
+alter table notas
+  add column mencao text check (mencao in ('SR', 'II', 'MI', 'MM', 'MS', 'SS'));
