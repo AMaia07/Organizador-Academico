@@ -174,7 +174,7 @@ async function removerDisciplina(disciplina) {
 async function carregarAtividades() {
   const { data, error } = await supabase
     .from("atividades")
-    .select("id, titulo, tipo, data_entrega, concluida, disciplinas(nome)")
+    .select("id, titulo, tipo, data_entrega, concluida, disciplina_id, disciplinas(nome)")
     .order("concluida")       // pendentes primeiro
     .order("data_entrega");   // depois, as datas mais próximas
   if (error) return mensagem("Não foi possível carregar as atividades: " + error.message, "erro");
@@ -212,31 +212,72 @@ async function carregarAtividades() {
     esquerda.className = "com-caixa";
     esquerda.append(caixa, info);
 
+        const editar = document.createElement("button");
+    editar.type = "button";
+    editar.className = "secundario pequeno";
+    editar.textContent = "Editar";
+    editar.addEventListener("click", () => iniciarEdicaoAtividade(a));
+
     const remover = document.createElement("button");
     remover.type = "button";
     remover.className = "perigo";
     remover.textContent = "Remover";
     remover.addEventListener("click", () => removerAtividade(a));
 
-    item.append(esquerda, remover);
+    const acoes = document.createElement("div");
+    acoes.className = "linha";
+    acoes.append(editar, remover);
+
+    item.append(esquerda, acoes);
     lista.append(item);
   }
 }
 
+let atividadeEmEdicao = null;
+
 $("form-atividade").addEventListener("submit", async (e) => {
   e.preventDefault();
   mensagem("");
-  const { error } = await supabase.from("atividades").insert({
+  const campos = {
     disciplina_id: $("atv-disciplina").value,
     titulo: $("atv-titulo").value.trim(),
     tipo: $("atv-tipo").value,
     data_entrega: $("atv-data").value,
-  });
-  if (error) return mensagem("Não foi possível adicionar: " + error.message, "erro");
-  e.target.reset();
-  mensagem("Atividade adicionada.", "ok");
+  };
+
+  const editando = atividadeEmEdicao !== null;
+  const { error } = editando
+    ? await supabase.from("atividades").update(campos).eq("id", atividadeEmEdicao.id)
+    : await supabase.from("atividades").insert(campos);
+  if (error) return mensagem("Não foi possível salvar: " + error.message, "erro");
+
+  sairDoModoEdicaoAtividade();
+  mensagem(editando ? "Atividade atualizada." : "Atividade adicionada.", "ok");
   carregarAtividades();
 });
+
+function iniciarEdicaoAtividade(a) {
+  atividadeEmEdicao = a;
+  $("atv-disciplina").value = a.disciplina_id;
+  $("atv-titulo").value = a.titulo;
+  $("atv-tipo").value = a.tipo;
+  $("atv-data").value = a.data_entrega;
+  $("titulo-form-atividade").textContent = "Editar atividade";
+  $("btn-salvar-atividade").textContent = "Salvar alterações";
+  $("btn-cancelar-atividade").hidden = false;
+  $("form-atividade").scrollIntoView({ behavior: "smooth" });
+  $("atv-titulo").focus();
+}
+
+function sairDoModoEdicaoAtividade() {
+  atividadeEmEdicao = null;
+  $("form-atividade").reset();
+  $("titulo-form-atividade").textContent = "Nova atividade";
+  $("btn-salvar-atividade").textContent = "Adicionar atividade";
+  $("btn-cancelar-atividade").hidden = true;
+}
+
+$("btn-cancelar-atividade").addEventListener("click", sairDoModoEdicaoAtividade);
 
 async function marcarConcluida(id, concluida) {
   const { error } = await supabase.from("atividades").update({ concluida }).eq("id", id);
@@ -249,6 +290,7 @@ async function removerAtividade(atividade) {
   const { error } = await supabase.from("atividades").delete().eq("id", atividade.id);
   if (error) return mensagem("Não foi possível remover: " + error.message, "erro");
   mensagem("Atividade removida.", "ok");
+    if (atividadeEmEdicao?.id === atividade.id) sairDoModoEdicaoAtividade();
   carregarAtividades();
 }
 // ---------- Notas ----------
@@ -305,36 +347,78 @@ async function carregarNotas() {
     detalhe.textContent = `${n.disciplinas.nome}, nota ${formatarNumero(n.nota)}, peso ${formatarNumero(n.peso)}`;
     info.append(detalhe);
 
+    const editar = document.createElement("button");
+    editar.type = "button";
+    editar.className = "secundario pequeno";
+    editar.textContent = "Editar";
+    editar.addEventListener("click", () => iniciarEdicaoNota(n));
+
     const remover = document.createElement("button");
     remover.type = "button";
     remover.className = "perigo";
     remover.textContent = "Remover";
     remover.addEventListener("click", () => removerNota(n));
 
-    item.append(info, remover);
+    const acoes = document.createElement("div");
+    acoes.className = "linha";
+    acoes.append(editar, remover);
+
+    item.append(info, acoes);
     lista.append(item);
   }
 }
 
+let notaEmEdicao = null;
+
 $("form-nota").addEventListener("submit", async (e) => {
   e.preventDefault();
   mensagem("");
-  const { error } = await supabase.from("notas").insert({
+  const campos = {
     disciplina_id: $("nota-disciplina").value,
     descricao: $("nota-descricao").value.trim(),
     nota: Number($("nota-valor").value),
     peso: Number($("nota-peso").value),
-  });
-  if (error) return mensagem("Não foi possível adicionar: " + error.message, "erro");
-  e.target.reset();
-  mensagem("Nota adicionada.", "ok");
+  };
+
+  const editando = notaEmEdicao !== null;
+  const { error } = editando
+    ? await supabase.from("notas").update(campos).eq("id", notaEmEdicao.id)
+    : await supabase.from("notas").insert(campos);
+  if (error) return mensagem("Não foi possível salvar: " + error.message, "erro");
+
+  sairDoModoEdicaoNota();
+  mensagem(editando ? "Nota atualizada." : "Nota adicionada.", "ok");
   carregarNotas();
 });
+
+function iniciarEdicaoNota(n) {
+  notaEmEdicao = n;
+  $("nota-disciplina").value = n.disciplina_id;
+  $("nota-descricao").value = n.descricao;
+  $("nota-valor").value = n.nota;
+  $("nota-peso").value = n.peso;
+  $("titulo-form-nota").textContent = "Editar nota";
+  $("btn-salvar-nota").textContent = "Salvar alterações";
+  $("btn-cancelar-nota").hidden = false;
+  $("form-nota").scrollIntoView({ behavior: "smooth" });
+  $("nota-descricao").focus();
+}
+
+function sairDoModoEdicaoNota() {
+  notaEmEdicao = null;
+  $("form-nota").reset();
+  $("titulo-form-nota").textContent = "Nova nota";
+  $("btn-salvar-nota").textContent = "Adicionar nota";
+  $("btn-cancelar-nota").hidden = true;
+}
+
+$("btn-cancelar-nota").addEventListener("click", sairDoModoEdicaoNota);
 
 async function removerNota(nota) {
   if (!confirm(`Remover a nota "${nota.descricao}"?`)) return;
   const { error } = await supabase.from("notas").delete().eq("id", nota.id);
   if (error) return mensagem("Não foi possível remover: " + error.message, "erro");
   mensagem("Nota removida.", "ok");
+  if (notaEmEdicao?.id === nota.id) sairDoModoEdicaoNota();
   carregarNotas();
 }
