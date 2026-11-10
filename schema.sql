@@ -68,3 +68,8 @@ create policy "dono acessa suas notas" on notas
 -- 3) Adição de menção ---------------------------------------------------------
 alter table notas
   add column mencao text check (mencao in ('SR', 'II', 'MI', 'MM', 'MS', 'SS'));
+
+-- 4) Adição de limite de faltas e contagem de faltas ---------------------------
+alter table disciplinas
+  add column limite_faltas integer check (limite_faltas > 0),
+  add column faltas integer not null default 0 check (faltas >= 0);
