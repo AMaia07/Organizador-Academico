@@ -4,7 +4,7 @@ Aplicativo web para organizar o semestre: disciplinas, prazos de trabalhos e pro
 
 Projeto de aprendizado, criado para praticar o ciclo completo de um produto: banco de dados, autenticação, interface, segurança e publicação.
 
-**Demonstração:** https://amaia07.github.io/organizador-academico/
+**Demonstração:** https://amaia07.github.io/Organizador-Academico/
 
 ## Funcionalidades
 
