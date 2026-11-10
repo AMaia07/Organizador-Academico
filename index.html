@@ -47,6 +47,8 @@
     .feita { opacity: .6; text-decoration: line-through; }
     .atrasada small { color: var(--erro); }
     .com-caixa { display: flex; align-items: center; gap: 12px; }
+    
+  button.pequeno { padding: 6px 10px; }
   </style>
 </head>
 <body>
@@ -105,12 +107,15 @@
 <h2>Notas lançadas</h2>
 <ul id="lista-notas"></ul>
 
-      <h2>Nova disciplina</h2>
+      <h2 id="titulo-form-disciplina">Nova disciplina</h2>
       <form id="form-disciplina">
         <label>Nome <input id="nome" required></label>
         <label>Professor (opcional) <input id="professor"></label>
         <label>Semestre <input id="semestre" placeholder="2026.2" required></label>
-        <div><button type="submit">Adicionar disciplina</button></div>
+        <div class="linha">
+        <button type="submit" id="btn-salvar-disciplina">Adicionar disciplina</button>
+        <button type="button" id="btn-cancelar-edicao" class="secundario" hidden>Cancelar</button>
+      </div>
       </form>
 
       <h2>Suas disciplinas</h2>

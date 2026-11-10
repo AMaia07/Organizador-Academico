@@ -90,30 +90,73 @@ async function carregarDisciplinas() {
     detalhe.textContent = [d.professor, d.semestre].filter(Boolean).join(", ");
     info.append(detalhe);
 
+        const editar = document.createElement("button");
+    editar.type = "button";
+    editar.className = "secundario pequeno";
+    editar.textContent = "Editar";
+    editar.addEventListener("click", () => iniciarEdicao(d));
+
     const remover = document.createElement("button");
     remover.type = "button";
     remover.className = "perigo";
     remover.textContent = "Remover";
     remover.addEventListener("click", () => removerDisciplina(d));
 
-    item.append(info, remover);
+    const acoes = document.createElement("div");
+    acoes.className = "linha";
+    acoes.append(editar, remover);
+
+    item.append(info, acoes);
     lista.append(item);
   }
 }
 
+let disciplinaEmEdicao = null; // guarda a disciplina que está sendo editada
+
 $("form-disciplina").addEventListener("submit", async (e) => {
   e.preventDefault();
   mensagem("");
-  const { error } = await supabase.from("disciplinas").insert({
+  const campos = {
     nome: $("nome").value.trim(),
     professor: $("professor").value.trim() || null,
     semestre: $("semestre").value.trim(),
-  });
-  if (error) return mensagem("Não foi possível adicionar: " + error.message, "erro");
-  e.target.reset();
-  mensagem("Disciplina adicionada.", "ok");
+  };
+
+  const editando = disciplinaEmEdicao !== null;
+  const { error } = editando
+    ? await supabase.from("disciplinas").update(campos).eq("id", disciplinaEmEdicao.id)
+    : await supabase.from("disciplinas").insert(campos);
+  if (error) return mensagem("Não foi possível salvar: " + error.message, "erro");
+
+  sairDoModoEdicao();
+  mensagem(editando ? "Disciplina atualizada." : "Disciplina adicionada.", "ok");
+  // O nome da disciplina aparece nas atividades e nas notas, então recarrega tudo
   carregarDisciplinas();
+  carregarAtividades();
+  carregarNotas();
 });
+
+function iniciarEdicao(d) {
+  disciplinaEmEdicao = d;
+  $("nome").value = d.nome;
+  $("professor").value = d.professor ?? "";
+  $("semestre").value = d.semestre;
+  $("titulo-form-disciplina").textContent = "Editar disciplina";
+  $("btn-salvar-disciplina").textContent = "Salvar alterações";
+  $("btn-cancelar-edicao").hidden = false;
+  $("form-disciplina").scrollIntoView({ behavior: "smooth" });
+  $("nome").focus();
+}
+
+function sairDoModoEdicao() {
+  disciplinaEmEdicao = null;
+  $("form-disciplina").reset();
+  $("titulo-form-disciplina").textContent = "Nova disciplina";
+  $("btn-salvar-disciplina").textContent = "Adicionar disciplina";
+  $("btn-cancelar-edicao").hidden = true;
+}
+
+$("btn-cancelar-edicao").addEventListener("click", sairDoModoEdicao);
 
 async function removerDisciplina(disciplina) {
   const ok = confirm(`Remover "${disciplina.nome}"? As atividades e notas dela também serão apagadas.`);
@@ -121,6 +164,7 @@ async function removerDisciplina(disciplina) {
   const { error } = await supabase.from("disciplinas").delete().eq("id", disciplina.id);
   if (error) return mensagem("Não foi possível remover: " + error.message, "erro");
   mensagem("Disciplina removida.", "ok");
+    if (disciplinaEmEdicao?.id === disciplina.id) sairDoModoEdicao();
   carregarDisciplinas();
   carregarAtividades();
   carregarNotas();

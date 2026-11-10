@@ -77,11 +77,11 @@ Média ponderada por disciplina:
 média = soma(nota × peso) ÷ soma(pesos)
 ```
 
-Exemplo: nota 8 com peso 1 e nota 6 com peso 2 resultam em (8×1 + 6×2) ÷ 3 = **6,67**.
+Exemplo: nota 4 com peso 1 e nota 7 com peso 2 resultam em (4×1 + 7×2) ÷ 3 = **6,00**.
 
 ## Ideias para as próximas versões
 
-- Editar disciplinas, atividades e notas
+- Editar atividades e notas
 - Filtrar por semestre
 - Avisos de prazos próximos
 - Montar o calendário a partir do plano de ensino, com IA
