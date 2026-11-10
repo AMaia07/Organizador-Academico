@@ -56,11 +56,12 @@ supabase.auth.onAuthStateChange((_evento, sessao) => {
 async function carregarDisciplinas() {
   const { data, error } = await supabase
     .from("disciplinas")
-    .select("id, nome, professor, semestre")
+    .select("id, nome, professor, semestre, limite_faltas, faltas")
     .order("nome");
   if (error) return mensagem("Não foi possível carregar as disciplinas: " + error.message, "erro");
 
-      for (const idSelect of ["atv-disciplina", "nota-disciplina"]) {
+  // Preenche as listas de disciplinas dos formulários de atividade e de nota
+  for (const idSelect of ["atv-disciplina", "nota-disciplina"]) {
     const select = $(idSelect);
     select.replaceChildren();
     for (const d of data) {
@@ -88,9 +89,26 @@ async function carregarDisciplinas() {
     info.textContent = d.nome; // textContent evita injetar HTML vindo do banco
     const detalhe = document.createElement("small");
     detalhe.textContent = [d.professor, d.semestre].filter(Boolean).join(", ");
-    info.append(detalhe);
+    const resumo = resumoFaltas(d);
+    const faltas = document.createElement("small");
+    faltas.textContent = resumo.texto;
+    if (resumo.classe) faltas.classList.add(resumo.classe);
+    info.append(detalhe, faltas);
 
-        const editar = document.createElement("button");
+    const mais = document.createElement("button");
+    mais.type = "button";
+    mais.className = "secundario pequeno";
+    mais.textContent = "+ falta";
+    mais.addEventListener("click", () => ajustarFaltas(d, 1, mais));
+
+    const menos = document.createElement("button");
+    menos.type = "button";
+    menos.className = "secundario pequeno";
+    menos.textContent = "− falta";
+    menos.disabled = d.faltas === 0;
+    menos.addEventListener("click", () => ajustarFaltas(d, -1, menos));
+
+    const editar = document.createElement("button");
     editar.type = "button";
     editar.className = "secundario pequeno";
     editar.textContent = "Editar";
@@ -104,11 +122,33 @@ async function carregarDisciplinas() {
 
     const acoes = document.createElement("div");
     acoes.className = "linha";
-    acoes.append(editar, remover);
+    acoes.append(mais, menos, editar, remover);
 
     item.append(info, acoes);
     lista.append(item);
   }
+}
+
+function resumoFaltas(d) {
+  if (!d.limite_faltas) return { texto: `Faltas: ${d.faltas}`, classe: "" };
+  const restam = d.limite_faltas - d.faltas;
+  const base = `Faltas: ${d.faltas} de ${d.limite_faltas}`;
+  if (restam < 0) return { texto: `${base} · limite ultrapassado em ${-restam}`, classe: "abaixo" };
+  if (d.faltas >= d.limite_faltas * 0.8) return { texto: `${base} · restam ${restam}`, classe: "aviso" };
+  return { texto: `${base} · restam ${restam}`, classe: "" };
+}
+
+async function ajustarFaltas(d, delta, botao) {
+  botao.disabled = true; // evita clique duplo antes de a lista recarregar
+  const { error } = await supabase
+    .from("disciplinas")
+    .update({ faltas: Math.max(0, d.faltas + delta) })
+    .eq("id", d.id);
+  if (error) {
+    botao.disabled = false;
+    return mensagem("Não foi possível registrar a falta: " + error.message, "erro");
+  }
+  carregarDisciplinas();
 }
 
 let disciplinaEmEdicao = null; // guarda a disciplina que está sendo editada
@@ -120,6 +160,8 @@ $("form-disciplina").addEventListener("submit", async (e) => {
     nome: $("nome").value.trim(),
     professor: $("professor").value.trim() || null,
     semestre: $("semestre").value.trim(),
+    limite_faltas: Number($("limite-faltas").value) || null,
+    faltas: Number($("faltas").value) || 0,
   };
 
   const editando = disciplinaEmEdicao !== null;
@@ -141,6 +183,8 @@ function iniciarEdicao(d) {
   $("nome").value = d.nome;
   $("professor").value = d.professor ?? "";
   $("semestre").value = d.semestre;
+  $("limite-faltas").value = d.limite_faltas ?? "";
+  $("faltas").value = d.faltas;
   $("titulo-form-disciplina").textContent = "Editar disciplina";
   $("btn-salvar-disciplina").textContent = "Salvar alterações";
   $("btn-cancelar-edicao").hidden = false;

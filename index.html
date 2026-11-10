@@ -50,6 +50,8 @@
     
   button.pequeno { padding: 6px 10px; }
   .abaixo { color: var(--erro); }
+  .aviso { color: #9a5b00; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -136,6 +138,8 @@
         <label>Nome <input id="nome" required></label>
         <label>Professor (opcional) <input id="professor"></label>
         <label>Semestre <input id="semestre" placeholder="2026.2" required></label>
+        <label>Limite de faltas (opcional) <input type="number" id="limite-faltas" min="1" step="1" placeholder="ex.: 15"></label>
+        <label>Faltas até agora <input type="number" id="faltas" min="0" step="1" value="0"></label>
         <div class="linha">
         <button type="submit" id="btn-salvar-disciplina">Adicionar disciplina</button>
         <button type="button" id="btn-cancelar-edicao" class="secundario" hidden>Cancelar</button>
