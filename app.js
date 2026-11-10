@@ -299,6 +299,15 @@ function formatarNumero(n) {
   return n.toFixed(2).replace(".", ",");
 }
 
+function mencao(valor) {
+  if (valor >= 9) return "SS";
+  if (valor >= 7) return "MS";
+  if (valor >= 5) return "MM";
+  if (valor >= 3) return "MI";
+  if (valor > 0) return "II";
+  return "SR";
+}
+
 function itemVazio(texto) {
   const li = document.createElement("li");
   li.textContent = texto;
@@ -329,8 +338,10 @@ async function carregarNotas() {
     const item = document.createElement("li");
     const nome = document.createElement("div");
     nome.textContent = g.nome;
+    const valor = g.somaNotas / g.somaPesos;
     const media = document.createElement("strong");
-    media.textContent = formatarNumero(g.somaNotas / g.somaPesos);
+    media.textContent = `${formatarNumero(valor)} (${mencao(valor)})`;
+    media.classList.toggle("abaixo", valor < 5);
     item.append(nome, media);
     medias.append(item);
   }
@@ -344,7 +355,7 @@ async function carregarNotas() {
     const info = document.createElement("div");
     info.textContent = n.descricao;
     const detalhe = document.createElement("small");
-    detalhe.textContent = `${n.disciplinas.nome}, nota ${formatarNumero(n.nota)}, peso ${formatarNumero(n.peso)}`;
+    detalhe.textContent = `${n.disciplinas.nome}, nota ${formatarNumero(n.nota)} (${mencao(n.nota)}), peso ${formatarNumero(n.peso)}`;
     info.append(detalhe);
 
     const editar = document.createElement("button");
