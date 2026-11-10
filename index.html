@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Organizador acadêmico</title>
+  <style>
+    :root {
+      --fundo: #f7f7f5; --texto: #1d2330; --suave: #5c6577;
+      --borda: #d9dce3; --acento: #1f4fd8; --erro: #b42318; --ok: #0b6b3a;
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body {
+      margin: 0; background: var(--fundo); color: var(--texto); line-height: 1.5;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    main { max-width: 640px; margin: 0 auto; padding: 24px 16px 64px; }
+    h1 { font-size: 1.5rem; margin: 0 0 4px; }
+    h2 { font-size: 1.1rem; margin: 32px 0 12px; }
+    p { margin: 0 0 12px; color: var(--suave); }
+    form { display: grid; gap: 12px; }
+    label { display: grid; gap: 4px; font-size: .9rem; font-weight: 600; }
+    input, select {
+      font: inherit; padding: 10px 12px; border: 1px solid var(--borda);
+      border-radius: 6px; background: #fff; color: var(--texto);
+    }
+    button {
+      font: inherit; padding: 10px 14px; border-radius: 6px; cursor: pointer;
+      border: 1px solid var(--acento); background: var(--acento); color: #fff;
+    }
+    button.secundario { background: transparent; color: var(--acento); }
+    button.perigo { border-color: var(--borda); background: transparent; color: var(--erro); padding: 6px 10px; }
+    :focus-visible { outline: 3px solid #8aa8ff; outline-offset: 2px; }
+    .linha { display: flex; gap: 8px; flex-wrap: wrap; }
+    .topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+    li {
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+      background: #fff; border: 1px solid var(--borda); border-radius: 6px; padding: 10px 12px;
+    }
+    li small { display: block; color: var(--suave); }
+    #mensagem { min-height: 1.5em; margin-top: 16px; font-weight: 600; }
+    #mensagem.erro { color: var(--erro); }
+    #mensagem.ok { color: var(--ok); }
+  input[type="checkbox"] { padding: 0; width: 20px; height: 20px; }
+    .feita { opacity: .6; text-decoration: line-through; }
+    .atrasada small { color: var(--erro); }
+    .com-caixa { display: flex; align-items: center; gap: 12px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Organizador acadêmico</h1>
+    <p>Disciplinas, prazos e notas do seu semestre.</p>
+
+    <!-- Tela de entrada -->
+    <section id="tela-login" hidden>
+      <form id="form-login">
+        <label>E-mail <input type="email" id="email" autocomplete="email" required></label>
+        <label>Senha <input type="password" id="senha" autocomplete="current-password" minlength="6" required></label>
+        <div class="linha">
+          <button type="submit">Entrar</button>
+          <button type="button" id="btn-criar-conta" class="secundario">Criar conta</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Tela das disciplinas -->
+    <section id="tela-app" hidden>
+      <div class="topo">
+        <p id="usuario-email"></p>
+        <button type="button" id="btn-sair" class="secundario">Sair</button>
+      </div>
+
+      <h2>Próximos prazos</h2>
+<ul id="lista-atividades"></ul>
+
+<h2>Nova atividade</h2>
+<form id="form-atividade">
+  <label>Disciplina <select id="atv-disciplina" required></select></label>
+  <label>Título <input id="atv-titulo" required></label>
+  <label>Tipo
+    <select id="atv-tipo">
+      <option value="trabalho">Trabalho</option>
+      <option value="prova">Prova</option>
+    </select>
+  </label>
+  <label>Data de entrega <input type="date" id="atv-data" required></label>
+  <div><button type="submit">Adicionar atividade</button></div>
+</form>
+
+<h2>Médias por disciplina</h2>
+<ul id="lista-medias"></ul>
+
+<h2>Nova nota</h2>
+<form id="form-nota">
+  <label>Disciplina <select id="nota-disciplina" required></select></label>
+  <label>Descrição <input id="nota-descricao" placeholder="Prova 1" required></label>
+  <label>Nota (0 a 10) <input type="number" id="nota-valor" min="0" max="10" step="0.01" required></label>
+  <label>Peso <input type="number" id="nota-peso" min="0.01" max="99" step="0.01" value="1" required></label>
+  <div><button type="submit">Adicionar nota</button></div>
+</form>
+
+<h2>Notas lançadas</h2>
+<ul id="lista-notas"></ul>
+
+      <h2>Nova disciplina</h2>
+      <form id="form-disciplina">
+        <label>Nome <input id="nome" required></label>
+        <label>Professor (opcional) <input id="professor"></label>
+        <label>Semestre <input id="semestre" placeholder="2026.2" required></label>
+        <div><button type="submit">Adicionar disciplina</button></div>
+      </form>
+
+      <h2>Suas disciplinas</h2>
+      <ul id="lista-disciplinas"></ul>
+    </section>
+
+    <div id="mensagem" role="status"></div>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
