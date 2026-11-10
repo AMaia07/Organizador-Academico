@@ -57,7 +57,7 @@ Todas têm `usuario_id`, preenchido automaticamente com o usuário logado.
    ```
 
 7. Abra o `index.html` com um servidor local, como o Live Server ou o Live Preview do VS Code. Abrir o arquivo direto no navegador não funciona, porque o JavaScript usa módulos.
-8. Em **Authentication > URL Configuration**, adicione o endereço local (por exemplo `http://127.0.0.1:3000/**`) em **Redirect URLs**.
+8. Em **Authentication > URL Configuration**, adicione o endereço local (por exemplo `http://127.0.0.1:3000/`) em **Redirect URLs**.
 
 ## Publicação
 
