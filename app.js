@@ -295,6 +295,9 @@ async function removerAtividade(atividade) {
 }
 // ---------- Notas ----------
 
+// Valor usado na média quando a nota é lançada só pela menção (meio da faixa)
+const VALOR_DA_MENCAO = { SS: 9, MS: 7, MM: 6, MI: 4, II: 1, SR: 0 };
+
 function formatarNumero(n) {
   return n.toFixed(2).replace(".", ",");
 }
@@ -314,10 +317,20 @@ function itemVazio(texto) {
   return li;
 }
 
+// Mostra o campo de nota ou o de menção, conforme a escolha
+function atualizarModoNota() {
+  const porMencao = $("nota-modo").value === "mencao";
+  $("campo-numero").hidden = porMencao;
+  $("campo-mencao").hidden = !porMencao;
+  $("nota-valor").required = !porMencao;
+}
+
+$("nota-modo").addEventListener("change", atualizarModoNota);
+
 async function carregarNotas() {
   const { data, error } = await supabase
     .from("notas")
-    .select("id, descricao, nota, peso, disciplina_id, disciplinas(nome)")
+    .select("id, descricao, nota, peso, mencao, disciplina_id, disciplinas(nome)")
     .order("criado_em");
   if (error) return mensagem("Não foi possível carregar as notas: " + error.message, "erro");
 
@@ -325,9 +338,10 @@ async function carregarNotas() {
   const porDisciplina = new Map();
   for (const n of data) {
     const grupo = porDisciplina.get(n.disciplina_id)
-      ?? { nome: n.disciplinas.nome, somaNotas: 0, somaPesos: 0 };
+      ?? { nome: n.disciplinas.nome, somaNotas: 0, somaPesos: 0, estimada: false };
     grupo.somaNotas += n.nota * n.peso;
     grupo.somaPesos += n.peso;
+    if (n.mencao) grupo.estimada = true; // houve nota lançada só pela menção
     porDisciplina.set(n.disciplina_id, grupo);
   }
 
@@ -340,7 +354,7 @@ async function carregarNotas() {
     nome.textContent = g.nome;
     const valor = g.somaNotas / g.somaPesos;
     const media = document.createElement("strong");
-    media.textContent = `${formatarNumero(valor)} (${mencao(valor)})`;
+    media.textContent = `${g.estimada ? "≈ " : ""}${formatarNumero(valor)} (${mencao(valor)})`;
     media.classList.toggle("abaixo", valor < 5);
     item.append(nome, media);
     medias.append(item);
@@ -355,7 +369,9 @@ async function carregarNotas() {
     const info = document.createElement("div");
     info.textContent = n.descricao;
     const detalhe = document.createElement("small");
-    detalhe.textContent = `${n.disciplinas.nome}, nota ${formatarNumero(n.nota)} (${mencao(n.nota)}), peso ${formatarNumero(n.peso)}`;
+    detalhe.textContent = n.mencao
+      ? `${n.disciplinas.nome}, menção ${n.mencao}, peso ${formatarNumero(n.peso)}`
+      : `${n.disciplinas.nome}, nota ${formatarNumero(n.nota)} (${mencao(n.nota)}), peso ${formatarNumero(n.peso)}`;
     info.append(detalhe);
 
     const editar = document.createElement("button");
@@ -384,10 +400,13 @@ let notaEmEdicao = null;
 $("form-nota").addEventListener("submit", async (e) => {
   e.preventDefault();
   mensagem("");
+  const porMencao = $("nota-modo").value === "mencao";
+  const mencaoEscolhida = porMencao ? $("nota-mencao").value : null;
   const campos = {
     disciplina_id: $("nota-disciplina").value,
     descricao: $("nota-descricao").value.trim(),
-    nota: Number($("nota-valor").value),
+    nota: porMencao ? VALOR_DA_MENCAO[mencaoEscolhida] : Number($("nota-valor").value),
+    mencao: mencaoEscolhida,
     peso: Number($("nota-peso").value),
   };
 
@@ -406,7 +425,10 @@ function iniciarEdicaoNota(n) {
   notaEmEdicao = n;
   $("nota-disciplina").value = n.disciplina_id;
   $("nota-descricao").value = n.descricao;
-  $("nota-valor").value = n.nota;
+  $("nota-modo").value = n.mencao ? "mencao" : "numero";
+  atualizarModoNota();
+  if (n.mencao) $("nota-mencao").value = n.mencao;
+  else $("nota-valor").value = n.nota;
   $("nota-peso").value = n.peso;
   $("titulo-form-nota").textContent = "Editar nota";
   $("btn-salvar-nota").textContent = "Salvar alterações";
@@ -418,6 +440,7 @@ function iniciarEdicaoNota(n) {
 function sairDoModoEdicaoNota() {
   notaEmEdicao = null;
   $("form-nota").reset();
+  atualizarModoNota(); // o reset não dispara o "change", então atualiza na mão
   $("titulo-form-nota").textContent = "Nova nota";
   $("btn-salvar-nota").textContent = "Adicionar nota";
   $("btn-cancelar-nota").hidden = true;

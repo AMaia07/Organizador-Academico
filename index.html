@@ -104,7 +104,23 @@
 <form id="form-nota">
   <label>Disciplina <select id="nota-disciplina" required></select></label>
   <label>Descrição <input id="nota-descricao" placeholder="Prova 1" required></label>
-  <label>Nota (0 a 10) <input type="number" id="nota-valor" min="0" max="10" step="0.01" required></label>
+  <label>Como lançar
+  <select id="nota-modo">
+    <option value="numero">Nota numérica</option>
+    <option value="mencao">Menção</option>
+  </select>
+</label>
+<label id="campo-numero">Nota (0 a 10) <input type="number" id="nota-valor" min="0" max="10" step="0.01" required></label>
+<label id="campo-mencao" hidden>Menção
+  <select id="nota-mencao">
+    <option value="SS">SS</option>
+    <option value="MS">MS</option>
+    <option value="MM">MM</option>
+    <option value="MI">MI</option>
+    <option value="II">II</option>
+    <option value="SR">SR</option>
+  </select>
+</label>
   <label>Peso <input type="number" id="nota-peso" min="0.01" max="99" step="0.01" value="1" required></label>
   <div class="linha">
   <button type="submit" id="btn-salvar-nota">Adicionar nota</button>
