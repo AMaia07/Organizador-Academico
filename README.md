@@ -15,6 +15,7 @@ Projeto de aprendizado, criado para praticar o ciclo completo de um produto: ban
   - marcar como concluída (vai para o fim da lista, riscada)
 - Notas com peso e **média ponderada** por disciplina
 - Dados privados por usuário, protegidos por Row Level Security
+- Menções (SR a SS) e lançamento por nota ou por menção
 
 ## Tecnologias
 
@@ -38,7 +39,8 @@ README.md
 | ------------- | ------------------------------------------------------------ |
 | `disciplinas` | nome, professor, semestre                                    |
 | `atividades`  | título, tipo (`trabalho` ou `prova`), data de entrega, concluída |
-| `notas`       | descrição, nota (0 a 10), peso                               |
+| `notas`       | descrição, nota (0 a 10), peso
+| `mencao`       | descrição, nota (SS a SR), peso                                |
 
 Todas têm `usuario_id`, preenchido automaticamente com o usuário logado.
 
