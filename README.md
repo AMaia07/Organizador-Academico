@@ -85,7 +85,6 @@ Exemplo: nota 4 com peso 1 e nota 7 com peso 2 resultam em (4×1 + 7×2) ÷ 3 = 
 ## Ideias para as próximas versões
 
 - Filtrar por semestre
-- Avisos de prazos próximos
 - Montar o calendário a partir do plano de ensino, com IA
 - Compartilhar disciplinas e prazos com a turma
 
