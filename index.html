@@ -52,6 +52,9 @@
   .abaixo { color: var(--erro); }
   .aviso { color: #9a5b00; }
   button:disabled { opacity: .5; cursor: not-allowed; }
+.proxima small { color: #9a5b00; }
+.alerta { background: #fff4e0; border: 1px solid #f0c27a; color: #7a4a00; padding: 10px 12px; border-radius: 6px; font-weight: 600; }
+a.botao-link { font: inherit; padding: 6px 10px; border: 1px solid var(--acento); border-radius: 6px; color: var(--acento); text-decoration: none; }
   </style>
 </head>
 <body>
@@ -78,6 +81,7 @@
         <button type="button" id="btn-sair" class="secundario">Sair</button>
       </div>
 
+      <p id="aviso-prazos" class="alerta" hidden></p>
       <h2>Próximos prazos</h2>
 <ul id="lista-atividades"></ul>
 

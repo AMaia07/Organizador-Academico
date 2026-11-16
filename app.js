@@ -215,6 +215,20 @@ async function removerDisciplina(disciplina) {
 }
 // ---------- Atividades ----------
 
+// Monta o link que abre o Google Agenda com o evento já preenchido
+function linkAgenda(a) {
+  const semTracos = (data) => data.replaceAll("-", "");
+  const fim = new Date(a.data_entrega + "T00:00:00");
+  fim.setDate(fim.getDate() + 1); // evento de dia inteiro termina no dia seguinte
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: `${a.titulo} (${a.disciplinas.nome})`,
+    dates: `${semTracos(a.data_entrega)}/${semTracos(fim.toLocaleDateString("sv-SE"))}`,
+    details: `${a.tipo === "prova" ? "Prova" : "Trabalho"} de ${a.disciplinas.nome}`,
+  });
+  return "https://calendar.google.com/calendar/render?" + params;
+}
+
 async function carregarAtividades() {
   const { data, error } = await supabase
     .from("atividades")
@@ -222,6 +236,21 @@ async function carregarAtividades() {
     .order("concluida")       // pendentes primeiro
     .order("data_entrega");   // depois, as datas mais próximas
   if (error) return mensagem("Não foi possível carregar as atividades: " + error.message, "erro");
+
+  // Resumo de prazos no topo da tela
+  const hoje = new Date().toLocaleDateString("sv-SE"); // formato AAAA-MM-DD
+  const limite = new Date();
+  limite.setDate(limite.getDate() + 3);
+  const ate = limite.toLocaleDateString("sv-SE"); // daqui a 3 dias
+  const pendentes = data.filter((a) => !a.concluida);
+  const atrasadas = pendentes.filter((a) => a.data_entrega < hoje).length;
+  const proximas = pendentes.filter((a) => a.data_entrega >= hoje && a.data_entrega <= ate).length;
+  const partes = [];
+  if (atrasadas) partes.push(`${atrasadas} atrasada${atrasadas > 1 ? "s" : ""}`);
+  if (proximas) partes.push(`${proximas} vence${proximas > 1 ? "m" : ""} em até 3 dias`);
+  const aviso = $("aviso-prazos");
+  aviso.textContent = partes.join(" · ");
+  aviso.hidden = partes.length === 0;
 
   const lista = $("lista-atividades");
   lista.replaceChildren();
@@ -233,11 +262,11 @@ async function carregarAtividades() {
     return;
   }
 
-  const hoje = new Date().toLocaleDateString("sv-SE"); // formato AAAA-MM-DD
   for (const a of data) {
     const item = document.createElement("li");
     if (a.concluida) item.classList.add("feita");
     if (!a.concluida && a.data_entrega < hoje) item.classList.add("atrasada");
+    if (!a.concluida && a.data_entrega >= hoje && a.data_entrega <= ate) item.classList.add("proxima");
 
     const caixa = document.createElement("input");
     caixa.type = "checkbox";
@@ -256,7 +285,14 @@ async function carregarAtividades() {
     esquerda.className = "com-caixa";
     esquerda.append(caixa, info);
 
-        const editar = document.createElement("button");
+    const agenda = document.createElement("a");
+    agenda.href = linkAgenda(a);
+    agenda.target = "_blank";
+    agenda.rel = "noopener";
+    agenda.className = "botao-link";
+    agenda.textContent = "Agenda";
+
+    const editar = document.createElement("button");
     editar.type = "button";
     editar.className = "secundario pequeno";
     editar.textContent = "Editar";
@@ -270,6 +306,7 @@ async function carregarAtividades() {
 
     const acoes = document.createElement("div");
     acoes.className = "linha";
+    if (!a.concluida) acoes.append(agenda); // só atividades pendentes vão para a agenda
     acoes.append(editar, remover);
 
     item.append(esquerda, acoes);
